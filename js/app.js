@@ -56,6 +56,13 @@ document.addEventListener('click', async e => {
 });
 
 (async function boot() {
-  try { await api('/me'); } catch (e) { return; }      // 401 -> login view already shown
+  try { await api('/me'); }
+  catch (e) {
+    if (e.message === 'Session expired') return;      // 401 -> login view already shown
+    loginView();                                      // network/server problem: still show login + reason
+    const le = document.getElementById('le');
+    if (le) le.textContent = 'Cannot reach server (' + e.message + '). Check config.js / backend / CORS.';
+    return;
+  }
   shell(); route(); window.addEventListener('hashchange', route); pollLive();
 })();
