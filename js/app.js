@@ -56,6 +56,7 @@ document.addEventListener('click', async e => {
 });
 
 (async function boot() {
+  root.innerHTML = '<div class="login"><div class="login-card"><h1>Connecting…</h1><p>Waking the server. First load can take up to a minute.</p></div></div>';
   try { await api('/me'); }
   catch (e) {
     if (e.message === 'Session expired') return;      // 401 -> login view already shown
