@@ -89,7 +89,7 @@ function productForm(p, done) {
     <div class="full"><label>Specifications (one per line, "Name: value")</label><textarea name="specs" placeholder="Dimensions: 120 x 60 cm&#10;Warranty: 5 years">${esc(specText)}</textarea></div>
     <div class="full checks">${[['isActive', 'Published'], ['isFeatured', 'Featured'], ['isPopular', 'Popular'], ['isNewArrival', 'New arrival']].map(([k, l]) => `<label><input type="checkbox" name="${k}" ${p[k] ? 'checked' : ''}>${l}</label>`).join('')}</div>
     <div class="full"><label>Images (first = main image) &amp; video · stored on Cloudinary</label><div class="media-grid" id="mg"></div>
-      <div class="drop" id="drop">Tap to add images (JPG/PNG/WEBP, max 8 MB each)<input id="fi" type="file" accept="image/*" multiple hidden></div>
+      <div class="drop" id="drop">Tap to add images (you can crop &amp; adjust each one to a square)<input id="fi" type="file" accept="image/*" multiple hidden></div>
       <div class="drop" id="dropv" style="margin-top:8px">Add a product video (MP4/WEBM, max 40 MB)<input id="fv" type="file" accept="video/mp4,video/webm,video/quicktime" hidden></div></div></form>`,
     footer: `<button class="btn" data-close>Cancel</button><button class="btn pri" id="pub">${isNew ? 'PUBLISH PRODUCT' : 'Save changes'}</button>`,
     onMount: (ov) => {
@@ -99,7 +99,7 @@ function productForm(p, done) {
         pending.map((f, i) => `<div class="mtile"><img src="${URL.createObjectURL(f)}" alt=""><div class="mbar"><button type="button" data-prm="${i}">Remove</button></div></div>`).join('') + pendingVideo.map((f, i) => `<div class="mtile"><div class="vid">${esc(f.name.slice(0, 12))}</div><div class="mbar"><button type="button" data-pvrm="${i}">Remove</button></div></div>`).join(''); };
       drawMedia();
       $('#drop', ov).onclick = () => $('#fi', ov).click(); $('#dropv', ov).onclick = () => $('#fv', ov).click();
-      $('#fi', ov).onchange = e => { pending.push(...e.target.files); e.target.value = ''; drawMedia(); };
+      $('#fi', ov).onchange = async e => { const fs = [...e.target.files]; e.target.value = ''; const out = await cropImages(fs); pending.push(...out); drawMedia(); };
       $('#fv', ov).onchange = e => { pendingVideo.push(...e.target.files); e.target.value = ''; drawMedia(); };
       mg.onclick = async e => {
         const rm = e.target.closest('[data-rm]'), mn = e.target.closest('[data-main]'), pr = e.target.closest('[data-prm]'), pv = e.target.closest('[data-pvrm]');
