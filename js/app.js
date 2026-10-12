@@ -1,6 +1,6 @@
 /* Admin shell: login, navigation (sidebar on desktop, bottom bar on mobile), live polling */
 const NAV = [['dashboard', 'Dashboard', 'dash'], ['leads', 'Leads', 'users'], ['products', 'Products', 'box'], ['orders', 'Orders', 'bag'], ['bulk', 'Bulk', 'office'], ['analytics', 'Analytics', 'chart'], ['carts', 'Carts', 'cart'], ['whatsapp', 'WhatsApp', 'wa'], ['categories', 'Categories', 'tag'], ['settings', 'Settings', 'cog']];
-const BOTTOM = ['dashboard', 'leads', 'products', 'orders', 'bulk'];
+const BOTTOM = ['dashboard', 'products', 'orders'];   // bottom bar: 2 left | big Add button | 1 right + More
 const root = $('#root');
 
 function loginView() {
@@ -15,9 +15,10 @@ function shell() {
     ${NAV.map(([k, l, i]) => `<button class="nav-i" data-nav="${k}">${ic(i)}${l}</button>`).join('')}<div class="grow"></div><a class="nav-i" href="/" target="_blank">${ic('grid')}View website</a><button class="nav-i" data-logout>${ic('out')}Logout</button></aside>
     <header class="top"><h1 id="ttl">Dashboard</h1><span class="topc" id="topc"></span><span class="live" id="live"><i></i>Offline</span><button class="x menu-btn hide" aria-hidden="true"></button></header>
     <main class="main" id="page"></main>
-    <nav class="bot">${BOTTOM.map(k => { const n = NAV.find(x => x[0] === k); return `<button data-nav="${k}">${ic(n[2])}${n[1]}</button>`; }).join('')}<button data-more>${ic('more')}More</button></nav></div>`;
+    <nav class="bot">${(() => { const b = k => { const n = NAV.find(x => x[0] === k); return `<button data-nav="${k}">${ic(n[2])}${n[1]}</button>`; }; return b('dashboard') + b('products') + `<button class="fab" data-add aria-label="Add product">${ic('plus')}</button>` + b('orders'); })()}<button data-more>${ic('more')}More</button></nav></div>`;
   root.onclick = e => {
     const n = e.target.closest('[data-nav]'); if (n) { location.hash = n.dataset.nav; return; }
+    if (e.target.closest('[data-add]')) return openAddProduct();
     if (e.target.closest('[data-logout]')) return logout();
     if (e.target.closest('[data-more]')) {
       const s = sheet({ title: 'More', small: true, body: `<div class="list">${NAV.filter(x => !BOTTOM.includes(x[0])).map(([k, l, i]) => `<button class="btn" style="justify-content:flex-start" data-m="${k}">${ic(i)}${l}</button>`).join('')}<a class="btn" href="/" target="_blank" style="justify-content:flex-start">${ic('grid')}View website</a><button class="btn bad" style="justify-content:flex-start" data-lo>${ic('out')}Logout</button></div>` });
@@ -28,9 +29,9 @@ function shell() {
 async function logout() { try { await api('/logout', { method: 'POST' }); } catch (e) { } try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { } location.reload(); }
 
 function route() {
-  const k = (location.hash.slice(1) || 'dashboard').split('?')[0], key = Pages[k] ? k : 'dashboard';
+  const k = (location.hash.slice(1) || 'products').split('?')[0], key = Pages[k] ? k : 'dashboard';
   $$('[data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === key));
-  $('#ttl').textContent = (NAV.find(n => n[0] === key) || [])[1] || 'Dashboard';
+  $('#ttl').textContent = (NAV.find(n => n[0] === key) || [])[1] || 'Products';
   const page = $('#page'); page.onclick = null; page.onchange = null; A.liveHandler = null; window.scrollTo(0, 0);
   Pages[key](page);
 }
