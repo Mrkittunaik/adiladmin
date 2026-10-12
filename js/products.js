@@ -20,7 +20,7 @@ function productCard(p) {
     <div class="item-b"><div class="kv"><div><small>Views</small><span>${p.stats.views || 0}</span></div><div><small>Cart adds</small><span>${p.stats.cartAdds || 0}</span></div><div><small>Enquiries</small><span>${p.stats.enquiries || 0}</span></div><div><small>WhatsApp</small><span>${p.stats.waClicks || 0}</span></div></div>
     ${out ? '<p style="color:var(--bad);font-weight:800;margin:0 0 8px">OUT OF STOCK</p>' : ''}
     <div class="acts">${arch ? `<button class="btn sm" data-act="restore">Restore</button><button class="btn sm bad" data-act="hard">Delete forever</button>` :
-      `<button class="btn sm" data-act="edit">Edit</button><button class="btn sm" data-act="stock">Stock</button><button class="btn sm" data-act="hide">${p.stockStatus === 'HIDDEN' ? 'Show' : 'Hide'}</button><button class="btn sm" data-act="dup">Duplicate</button><a class="btn sm" target="_blank" href="/#/product/${p.pid}">View</a><button class="btn sm bad" data-act="del">Archive</button>`}</div></div></div>`;
+      `<button class="btn sm" data-act="edit">Edit</button><button class="btn sm" data-act="stock">Stock</button><button class="btn sm" data-act="hide">${p.stockStatus === 'HIDDEN' ? 'Show' : 'Hide'}</button><button class="btn sm" data-act="dup">Duplicate</button><a class="btn sm" target="_blank" href="https://adilfurnitures.com/#/product/${p.pid}">View</a><button class="btn sm bad" data-act="del">Archive</button>`}</div></div></div>`;
 }
 
 Pages.products = async (el) => {
