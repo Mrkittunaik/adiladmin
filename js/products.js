@@ -5,6 +5,12 @@ const loadCats = async () => { CATS = (await api('/categories')).items; return C
 const catOptions = (sel) => { const groups = CATS.filter(c => !c.parent), kids = id => CATS.filter(c => String(c.parent) === String(id));
   return groups.map(g => `<optgroup label="${esc(g.name)}${g.isActive ? '' : ' (hidden)'}"><option value="${g._id}" ${sel === g._id ? 'selected' : ''}>${esc(g.name)} (general)</option>${kids(g._id).map(k => `<option value="${k._id}" ${sel === k._id ? 'selected' : ''}>${esc(k.name)}</option>`).join('')}</optgroup>`).join(''); };
 
+function openAddProduct() {
+  const cur = () => (location.hash.slice(1) || 'products').split('?')[0];
+  const go = () => productForm(null, () => { if (cur() === 'products') route(); });
+  if (cur() !== 'products') { location.hash = 'products'; setTimeout(go, 80); } else go();
+}
+
 function productCard(p) {
   const out = p.stockStatus === 'OUT_OF_STOCK', arch = !p.isActive || p.deletedAt;
   const img = p.thumb ? `<img class="pimg" src="${esc(p.thumb)}" alt="" loading="lazy">` : `<div class="pimg"></div>`;
@@ -82,10 +88,10 @@ function productForm(p, done) {
     <div><label>Compare-at price (₹)</label><input name="compareAtPrice" type="number" min="0" value="${p.compareAtPrice || ''}"></div>
     <div><label>Discount %</label><input name="discount" type="number" min="0" max="95" value="${p.discount || ''}" placeholder="auto from compare-at"></div>
     <div><label>Stock</label><input name="stock" type="number" min="0" value="${p.stock}"></div>
-    <div><label>Material</label><input name="material" value="${esc(p.material || '')}"></div><div><label>Colour</label><input name="color" value="${esc(p.color || '')}"></div>
-    <div class="full"><label>Short description</label><input name="shortDescription" maxlength="300" value="${esc(p.shortDescription || '')}"></div>
-    <div class="full"><label>Description</label><textarea name="description">${esc(p.description || '')}</textarea></div>
-    <div class="full"><label>Tags (comma separated)</label><input name="tags" value="${esc((p.tags || []).join(', '))}"></div>
+    <div><label>Material</label><input name="material" value="${esc(p.material || '')}" placeholder="auto by category"></div><div><label>Colour</label><input name="color" value="${esc(p.color || '')}" placeholder="Black if empty"></div>
+    <div class="full"><label>Short description</label><input name="shortDescription" maxlength="300" placeholder="auto by category if empty" value="${esc(p.shortDescription || '')}"></div>
+    <div class="full"><label>Description</label><textarea name="description" rows="8" placeholder="Auto-filled from the category if you leave it empty">${esc(p.description || '')}</textarea></div>
+    <div class="full"><label>Tags (comma separated)</label><input name="tags" placeholder="auto by category" value="${esc((p.tags || []).join(', '))}"></div>
     <div class="full"><label>Specifications (one per line, "Name: value")</label><textarea name="specs" placeholder="Dimensions: 120 x 60 cm&#10;Warranty: 5 years">${esc(specText)}</textarea></div>
     <div class="full checks">${[['isActive', 'Published'], ['isFeatured', 'Featured'], ['isPopular', 'Popular'], ['isNewArrival', 'New arrival']].map(([k, l]) => `<label><input type="checkbox" name="${k}" ${p[k] ? 'checked' : ''}>${l}</label>`).join('')}</div>
     <div class="full"><label>Images (first = main image) &amp; video · stored on Cloudinary</label><div class="media-grid" id="mg"></div>
@@ -93,7 +99,11 @@ function productForm(p, done) {
       <div class="drop" id="dropv" style="margin-top:8px">Add a product video (MP4/WEBM, max 40 MB)<input id="fv" type="file" accept="video/mp4,video/webm,video/quicktime" hidden></div></div></form>`,
     footer: `<button class="btn" data-close>Cancel</button><button class="btn pri" id="pub">${isNew ? 'PUBLISH PRODUCT' : 'Save changes'}</button>`,
     onMount: (ov) => {
-      const mg = $('#mg', ov);
+      const mg = $('#mg', ov), pform = $('#pf', ov), autoVal = {};
+      const catName = () => { const c = CATS.find(x => String(x._id) === pform.elements.category.value); if (!c) return ''; const par = CATS.find(x => String(x._id) === String(c.parent)); return (par ? par.name + ' ' : '') + c.name; };
+      /* fills only EMPTY fields (or fields still holding the previous auto text) - never overwrites what the admin typed */
+      const applyAuto = () => { const d = autoDetails(catName()); ['description', 'shortDescription', 'material', 'color', 'tags'].forEach(n => { const el = pform.elements[n], cur = el.value.trim(); if (!cur || cur === autoVal[n]) { el.value = d[n]; autoVal[n] = d[n]; } }); };
+      pform.elements.category.addEventListener('change', applyAuto);
       const drawMedia = () => { mg.innerHTML = images.map((m, i) => `<div class="mtile ${i === 0 ? 'main' : ''}">${i === 0 ? '<span class="tag">MAIN</span>' : ''}<img src="${esc(m.thumb || m.url)}" alt=""><div class="mbar">${i ? `<button type="button" data-main="${i}">Main</button>` : ''}<button type="button" data-rm="${m.publicId}">Del</button></div></div>`).join('') +
         videos.map(m => `<div class="mtile"><div class="vid">Video</div><div class="mbar"><button type="button" data-rm="${m.publicId}">Del</button></div></div>`).join('') +
         pending.map((f, i) => `<div class="mtile"><img src="${URL.createObjectURL(f)}" alt=""><div class="mbar"><button type="button" data-prm="${i}">Remove</button></div></div>`).join('') + pendingVideo.map((f, i) => `<div class="mtile"><div class="vid">${esc(f.name.slice(0, 12))}</div><div class="mbar"><button type="button" data-pvrm="${i}">Remove</button></div></div>`).join(''); };
@@ -112,6 +122,7 @@ function productForm(p, done) {
       $('#pub', ov).onclick = async () => {
         const f = $('#pf', ov), v = n => f.elements[n].value.trim(), c = n => f.elements[n].checked;
         if (!v('name') || v('price') === '' || !v('category')) return toast('Name, price and category are required', 1);
+        applyAuto();
         const specs = {}; v('specs').split('\n').forEach(l => { const i = l.indexOf(':'); if (i > 0) specs[l.slice(0, i).trim()] = l.slice(i + 1).trim(); });
         const body = { name: v('name'), category: v('category'), sku: v('sku'), price: +v('price'), compareAtPrice: +v('compareAtPrice') || 0, discount: +v('discount') || 0, stock: +v('stock') || 0,
           material: v('material'), color: v('color'), shortDescription: v('shortDescription'), description: f.elements.description.value, tags: v('tags'), specifications: specs, isActive: c('isActive'), isFeatured: c('isFeatured'), isPopular: c('isPopular'), isNewArrival: c('isNewArrival') };
