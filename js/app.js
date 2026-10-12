@@ -12,7 +12,7 @@ A.onUnauthorized = () => { stopLive(); try { sessionStorage.removeItem(TOKEN_KEY
 
 function shell() {
   root.innerHTML = `<div class="shell"><aside class="side"><div class="brand"><img src="favicon-180.png" alt="">Adil Admin</div>
-    ${NAV.map(([k, l, i]) => `<button class="nav-i" data-nav="${k}">${ic(i)}${l}</button>`).join('')}<div class="grow"></div><a class="nav-i" href="/" target="_blank">${ic('grid')}View website</a><button class="nav-i" data-logout>${ic('out')}Logout</button></aside>
+    ${NAV.map(([k, l, i]) => `<button class="nav-i" data-nav="${k}">${ic(i)}${l}</button>`).join('')}<div class="grow"></div><a class="nav-i" href="https://adilfurnitures.com/" target="_blank" rel="noopener">${ic('grid')}View website</a><button class="nav-i" data-logout>${ic('out')}Logout</button></aside>
     <header class="top"><h1 id="ttl">Dashboard</h1><span class="topc" id="topc"></span><span class="live" id="live"><i></i>Offline</span><button class="x menu-btn hide" aria-hidden="true"></button></header>
     <main class="main" id="page"></main>
     <nav class="bot">${(() => { const b = k => { const n = NAV.find(x => x[0] === k); return `<button data-nav="${k}">${ic(n[2])}${n[1]}</button>`; }; return b('dashboard') + b('products') + `<button class="fab" data-add aria-label="Add product">${ic('plus')}</button>` + b('orders'); })()}<button data-more>${ic('more')}More</button></nav></div>`;
@@ -21,7 +21,7 @@ function shell() {
     if (e.target.closest('[data-add]')) return openAddProduct();
     if (e.target.closest('[data-logout]')) return logout();
     if (e.target.closest('[data-more]')) {
-      const s = sheet({ title: 'More', small: true, body: `<div class="list">${NAV.filter(x => !BOTTOM.includes(x[0])).map(([k, l, i]) => `<button class="btn" style="justify-content:flex-start" data-m="${k}">${ic(i)}${l}</button>`).join('')}<a class="btn" href="/" target="_blank" style="justify-content:flex-start">${ic('grid')}View website</a><button class="btn bad" style="justify-content:flex-start" data-lo>${ic('out')}Logout</button></div>` });
+      const s = sheet({ title: 'More', small: true, body: `<div class="list">${NAV.filter(x => !BOTTOM.includes(x[0])).map(([k, l, i]) => `<button class="btn" style="justify-content:flex-start" data-m="${k}">${ic(i)}${l}</button>`).join('')}<a class="btn" href="https://adilfurnitures.com/" target="_blank" rel="noopener" style="justify-content:flex-start">${ic('grid')}View website</a><button class="btn bad" style="justify-content:flex-start" data-lo>${ic('out')}Logout</button></div>` });
       s.el.onclick = ev => { const m = ev.target.closest('[data-m]'); if (m) { s.close(); location.hash = m.dataset.m; } if (ev.target.closest('[data-lo]')) { s.close(); logout(); } if (ev.target.closest('[data-close]')) s.close(); };
     }
   };
