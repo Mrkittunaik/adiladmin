@@ -61,21 +61,38 @@ function toast(msg, bad) {
   const t = document.createElement('div'); t.className = 'toast' + (bad ? ' bad' : ''); t.textContent = msg;
   $('#toasts').appendChild(t); setTimeout(() => t.remove(), bad ? 4500 : 2400);
 }
-function sheet({ title, body, footer, small, onMount }) {
+function sheet({ title, body, footer, small, onMount, onClose }) {
   const ov = document.createElement('div'); ov.className = 'ov';
   ov.innerHTML = `<div class="sheet${small ? ' small' : ''}" role="dialog" aria-modal="true"><div class="sheet-h"><h3>${esc(title)}</h3><button class="x" data-close aria-label="Close">${ic('x')}</button></div><div class="sheet-b">${body || ''}</div>${footer ? `<div class="sheet-f">${footer}</div>` : ''}</div>`;
   document.body.appendChild(ov);
-  const close = () => ov.remove();
-  ov.addEventListener('mousedown', e => { if (e.target === ov) close(); });
+  const onKey = e => {                                   // Esc closes only the top-most sheet
+    if (!ov.isConnected) return document.removeEventListener('keydown', onKey);
+    if (e.key === 'Escape' && ov === [...document.querySelectorAll('.ov')].pop()) close();
+  };
+  const close = () => { if (!ov.isConnected) return; ov.remove(); document.removeEventListener('keydown', onKey); onClose && onClose(); };
+  document.addEventListener('keydown', onKey);
+  ov.addEventListener('pointerdown', e => { if (e.target === ov) close(); });
   ov.addEventListener('click', e => { if (e.target.closest('[data-close]')) close(); });
   onMount && onMount(ov, close);
   return { el: ov, close };
 }
 function confirmBox(msg, okLabel = 'Confirm', danger) {
   return new Promise(res => {
-    const s = sheet({ title: 'Please confirm', small: true, body: `<p style="margin:0">${esc(msg)}</p>`,
+    const s = sheet({ title: 'Please confirm', small: true, body: `<p style="margin:0">${esc(msg)}</p>`, onClose: () => res(false),
       footer: `<button class="btn" data-no>Cancel</button><button class="btn ${danger ? 'dark' : 'pri'}" data-yes>${esc(okLabel)}</button>` });
-    s.el.addEventListener('click', e => { if (e.target.closest('[data-yes]')) { s.close(); res(true); } else if (e.target.closest('[data-no],[data-close]')) { s.close(); res(false); } });
+    s.el.addEventListener('click', e => { if (e.target.closest('[data-yes]')) { res(true); s.close(); } else if (e.target.closest('[data-no]')) s.close(); });
+  });
+}
+/* in-app text prompt (replaces the browser's native prompt() box) -> string, or null if cancelled */
+function askText(title, label, value = '', okLabel = 'Save') {
+  return new Promise(res => {
+    const s = sheet({ title, small: true, onClose: () => res(null),
+      body: `<div class="f"><div class="full"><label>${esc(label)}</label><input id="ask-i" value="${esc(value)}" autocomplete="off" enterkeyhint="done"></div></div>`,
+      footer: `<button class="btn" data-no>Cancel</button><button class="btn pri" data-yes>${esc(okLabel)}</button>`,
+      onMount: ov => setTimeout(() => { const i = $('#ask-i', ov); if (i) { i.focus(); i.select(); } }, 80) });
+    const submit = () => { const v = $('#ask-i', s.el).value.trim(); res(v || null); s.close(); };
+    s.el.addEventListener('click', e => { if (e.target.closest('[data-yes]')) submit(); else if (e.target.closest('[data-no]')) s.close(); });
+    s.el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
   });
 }
 const skeleton = (n = 4) => Array.from({ length: n }, () => '<div class="skel"></div>').join('');
