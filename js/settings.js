@@ -11,8 +11,8 @@ Pages.categories = async (el) => {
         const b = e.target.closest('[data-a]'); if (!b) return; const id = b.closest('.item').dataset.id, c = cats.find(x => x._id === id), a = b.dataset.a;
         try {
           if (a === 'toggle') { await api('/categories/' + id, { method: 'PUT', body: { isActive: !c.isActive } }); }
-          else if (a === 'rename') { const n = prompt('New name', c.name); if (!n) return; await api('/categories/' + id, { method: 'PUT', body: { name: n } }); }
-          else if (a === 'sub') { const n = prompt('Sub-category name'); if (!n) return; await api('/categories', { method: 'POST', body: { name: n, parent: id } }); }
+          else if (a === 'rename') { const n = await askText('Rename category', 'Category name', c.name); if (!n) return; await api('/categories/' + id, { method: 'PUT', body: { name: n } }); }
+          else if (a === 'sub') { const n = await askText('Add sub-category', 'Sub-category name', '', 'Add'); if (!n) return; await api('/categories', { method: 'POST', body: { name: n, parent: id } }); }
           else if (a === 'up' || a === 'down') { const ids = groups.map(g => g._id), i = ids.indexOf(id), j = a === 'up' ? i - 1 : i + 1; if (j < 0 || j >= ids.length) return; [ids[i], ids[j]] = [ids[j], ids[i]]; await api('/categories/reorder', { method: 'PUT', body: { ids } }); }
           else if (a === 'del') {
             try { if (!await confirmBox(`Delete "${c.name}"?`, 'Delete', true)) return; await api('/categories/' + id, { method: 'DELETE' }); }
@@ -26,7 +26,7 @@ Pages.categories = async (el) => {
     } catch (e) { $('#cl').innerHTML = empty(e.message); }
   };
   await draw();
-  $('#addC').onclick = async () => { const n = prompt('Category name (e.g. Gaming, Dining)'); if (!n) return; try { await api('/categories', { method: 'POST', body: { name: n } }); toast('Category added - live on the website'); draw(); } catch (x) { toast(x.message, 1); } };
+  $('#addC').onclick = async () => { const n = await askText('Add category', 'Category name (e.g. Gaming, Dining)', '', 'Add'); if (!n) return; try { await api('/categories', { method: 'POST', body: { name: n } }); toast('Category added - live on the website'); draw(); } catch (x) { toast(x.message, 1); } };
   A.liveHandler = null;
 };
 
