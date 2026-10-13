@@ -7,7 +7,7 @@ const CARDS = c => [
   ['Bulk Enquiries', num(c.bulk), 'office furniture'], ['Total Enquiries', num(c.enquiries), 'orders + bulk']
 ];
 const statHTML = c => CARDS(c).map(([l, v, s, k]) => `<div class="stat ${k || ''}"><span>${l}</span><b>${v}</b><small>${s}</small></div>`).join('');
-const periodHTML = c => `<div class="kv" style="grid-template-columns:repeat(5,1fr);margin:0;text-align:center">${[['Today', c.today], ['Yesterday', c.yesterday], ['7 days', c.last7], ['30 days', c.last30], ['All time', c.totalVisits]].map(([l, v]) => `<div><small>${l}</small><b style="font-size:20px;font-family:var(--serif)">${num(v)}</b></div>`).join('')}</div>`;
+const periodHTML = c => `<div class="periods">${[['Today', c.today], ['Yesterday', c.yesterday], ['7 days', c.last7], ['30 days', c.last30], ['All time', c.totalVisits]].map(([l, v]) => `<div><small>${l}</small><b>${num(v)}</b></div>`).join('')}</div>`;
 const feedHTML = a => a && a.length ? `<ul class="feed" style="padding:0;margin:0">${a.map(e => `<li><time>${ago(e.at)}</time><span><b>${esc(e.who)}</b> · ${esc(e.text)}</span></li>`).join('')}</ul>` : empty('No activity yet - visits and clicks will appear here live.');
 const chartSeries = ch => [{ name: 'Visits', color: COLORS.visits, data: ch.visits }, { name: 'WhatsApp', color: COLORS.whatsapp, data: ch.whatsapp }, { name: 'Product views', color: COLORS.productViews, data: ch.productViews }, { name: 'Cart adds', color: COLORS.cartAdds, data: ch.cartAdds }, { name: 'Enquiries', color: COLORS.enquiries, data: ch.enquiries }];
 let dashRange = '7d';
@@ -47,7 +47,7 @@ Pages.analytics = async (el) => {
     const funnel = [['Visits', g('SESSION_START')], ['Product views', g('PRODUCT_VIEW')], ['Cart adds', g('CART_ADD')], ['Checkout starts', g('CHECKOUT_START')], ['WhatsApp clicks', g('WHATSAPP_CLICK')], ['Popup leads', g('POPUP_SUBMIT')], ['Enquiries', g('ENQUIRY_SUBMITTED')], ['Bulk enquiries', g('BULK_ENQUIRY')], ['Cart removals', g('CART_REMOVE')], ['Category views', g('CATEGORY_VIEW')]];
     $('#an').innerHTML = `<div class="grid stats">${funnel.map(([l, v]) => `<div class="stat"><span>${l}</span><b>${num(v)}</b></div>`).join('')}</div>
       <div class="card" style="margin-top:12px"><div class="sec-h">Trends</div>${lineChart(s.chart.labels, chartSeries(s.chart))}</div>
-      <div class="grid two" style="margin-top:12px"><div class="grid three" style="grid-template-columns:1fr 1fr">
+      <div class="grid two" style="margin-top:12px"><div class="grid duo">
         <div class="card"><div class="sec-h">Most viewed products</div>${barList(s.top.viewed, p => p.name, p => p.stats.views)}</div>
         <div class="card"><div class="sec-h">Most added to cart</div>${barList(s.top.cart, p => p.name, p => p.stats.cartAdds)}</div>
         <div class="card"><div class="sec-h">Most WhatsApp-clicked</div>${barList(s.top.whatsapp, p => p.name, p => p.stats.waClicks)}</div>
