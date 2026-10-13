@@ -31,6 +31,7 @@ async function logout() { try { await api('/logout', { method: 'POST' }); } catc
 function route() {
   const k = (location.hash.slice(1) || 'products').split('?')[0], key = Pages[k] ? k : 'dashboard';
   $$('[data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === key));
+  const mb = $('[data-more]'); if (mb) mb.classList.toggle('on', !BOTTOM.includes(key));   // highlight "More" when on a page that lives inside it
   $('#ttl').textContent = (NAV.find(n => n[0] === key) || [])[1] || 'Products';
   const page = $('#page'); page.onclick = null; page.onchange = null; A.liveHandler = null; window.scrollTo(0, 0);
   Pages[key](page);
