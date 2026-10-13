@@ -39,8 +39,10 @@ const badge = (t, cls) => `<span class="badge b-${cls || t}">${esc(String(t).rep
 /* API (cookie session; any 401 returns to login) */
 const A = { onUnauthorized: null, liveHandlers: new Set() };
 const API_BASE = (window.ADMIN_API_BASE || '').replace(/\/$/, '');
-const TOKEN_KEY = 'adil_admin_token';          // sessionStorage: cleared when the tab closes; server-side session can be revoked by logout
-const getToken = () => { try { return sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
+const TOKEN_KEY = 'adil_admin_token';          // localStorage: stays signed in across tab/browser restarts until Logout (or the server rejects the token)
+const getToken = () => { try { return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
+const setToken = t => { try { localStorage.setItem(TOKEN_KEY, t); sessionStorage.removeItem(TOKEN_KEY); } catch (e) { } };
+const clearToken = () => { try { localStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(TOKEN_KEY); } catch (e) { } };
 const authHeaders = () => (getToken() ? { Authorization: 'Bearer ' + getToken() } : {});
 async function api(path, o = {}) {
   let tries = 0;
