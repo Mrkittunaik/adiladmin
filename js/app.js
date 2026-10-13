@@ -6,9 +6,9 @@ const root = $('#root');
 function loginView() {
   root.innerHTML = `<div class="login"><form class="login-card" id="lf"><h1>Admin login</h1><p>Adil Furnitures dashboard</p><input id="code" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Enter admin code" required autofocus><button class="btn pri" style="width:100%" id="lb">Sign in</button><p id="le" style="color:var(--bad);margin:12px 0 0;font-size:14px"></p></form></div>`;
   $('#lf').onsubmit = async e => { e.preventDefault(); const b = $('#lb'); b.disabled = true; b.textContent = 'Signing in…'; $('#le').textContent = '';
-    try { const r = await api('/login', { method: 'POST', body: { code: $('#code').value } }); sessionStorage.setItem(TOKEN_KEY, r.token); location.reload(); } catch (x) { $('#le').textContent = x.message; b.disabled = false; b.textContent = 'Sign in'; $('#code').select(); } };
+    try { const r = await api('/login', { method: 'POST', body: { code: $('#code').value } }); setToken(r.token); location.reload(); } catch (x) { $('#le').textContent = x.message; b.disabled = false; b.textContent = 'Sign in'; $('#code').select(); } };
 }
-A.onUnauthorized = () => { stopLive(); try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { } loginView(); };
+A.onUnauthorized = () => { stopLive(); clearToken(); loginView(); };
 
 function shell() {
   root.innerHTML = `<div class="shell"><aside class="side"><div class="brand"><img src="favicon-180.png" alt="">Adil Admin</div>
@@ -26,7 +26,7 @@ function shell() {
     }
   };
 }
-async function logout() { try { await api('/logout', { method: 'POST' }); } catch (e) { } try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { } location.reload(); }
+async function logout() { try { await api('/logout', { method: 'POST' }); } catch (e) { } clearToken(); location.reload(); }
 
 function route() {
   const k = (location.hash.slice(1) || 'products').split('?')[0], key = Pages[k] ? k : 'dashboard';
