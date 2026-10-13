@@ -30,6 +30,9 @@ Pages.categories = async (el) => {
   A.liveHandler = null;
 };
 
+const SOCIALS = [['instagram', 'Instagram'], ['facebook', 'Facebook'], ['youtube', 'YouTube'], ['twitter', 'X (Twitter)'], ['linkedin', 'LinkedIn'], ['pinterest', 'Pinterest'], ['telegram', 'Telegram']];
+const cleanUrl = v => { v = String(v || '').trim(); return v && !/^https?:\/\//i.test(v) ? 'https://' + v.replace(/^\/+/, '') : v; };   // "instagram.com/x" -> "https://instagram.com/x"
+
 Pages.settings = async (el) => {
   el.innerHTML = `<div class="page-h"><h2>Settings</h2></div><div id="sb">${skeleton(4)}</div>`;
   let s; try { s = await api('/settings'); } catch (e) { $('#sb').innerHTML = empty(e.message); return; }
@@ -41,13 +44,14 @@ Pages.settings = async (el) => {
     <div class="card"><div class="sec-h">Bulk enquiry</div><div class="f"><div class="full checks">${chk('bulk.enabled', 'Bulk enquiry enabled')}</div>${t('bulk.minQty', 'Minimum bulk quantity', 'number')}${t('bulk.discountPercent', 'Optional discount % (0 = don\'t mention)', 'number')}<div class="full">${t('bulk.message', 'Bulk enquiry message')}</div><div class="full">${t('bulk.customMessage', 'Custom message when bulk quantity is selected (optional)')}</div></div></div></div>
     <div class="grid">
     <div class="card"><div class="sec-h">Lead popup</div><div class="f"><div class="full checks">${chk('popup.enabled', 'Popup enabled')}${chk('popup.showInterest', 'Ask “Interested in”')}</div>${t('popup.delaySeconds', 'Delay (seconds)', 'number')}${t('popup.frequencyHours', 'Show again after (hours)', 'number')}<div class="full">${t('popup.title', 'Title')}</div><div class="full">${t('popup.description', 'Description')}</div>${t('popup.cta', 'Button text')}<div class="full">${t('popup.interests', 'Interest options (comma separated)')}</div></div></div>
-    <div class="card"><div class="sec-h">Homepage, social &amp; footer</div><div class="f"><div class="full">${t('home.heroTitle', 'Homepage hero heading')}</div>${t('social.instagram', 'Instagram URL')}${t('social.facebook', 'Facebook URL')}${t('social.youtube', 'YouTube URL')}<div class="full">${t('footerText', 'Footer text')}</div></div></div>
+    <div class="card"><div class="sec-h">Social media links</div><p style="color:var(--soft);margin:-4px 0 12px;font-size:13.5px">Paste a profile link. It is saved to the website's social icons when you tap Save settings. Leave a field empty to hide that icon.</p><div class="f">${SOCIALS.map(([k, l]) => `<div class="full">${t('social.' + k, l + ' link', 'url', 'inputmode="url" autocapitalize="off" placeholder="https://"')}</div>`).join('')}</div></div>
+    <div class="card"><div class="sec-h">Homepage &amp; footer</div><div class="f"><div class="full">${t('home.heroTitle', 'Homepage hero heading')}</div><div class="full">${t('footerText', 'Footer text')}</div></div></div>
     <div class="card"><div class="sec-h">Demo data</div><p style="color:var(--soft);margin:0 0 10px;font-size:14px">The original catalogue can be (re)imported as demo products at any time. Real products are never touched.</p><button class="btn" id="imp">Import demo catalogue</button></div></div></div>
     <div class="acts" style="margin-top:14px"><button class="btn pri" id="saveS">Save settings</button></div>`;
   $('#imp').onclick = async () => { try { const r = await api('/products/demo', { method: 'POST', body: { action: 'import' } }); toast(`${r.affected} demo product(s) imported`); } catch (x) { toast(x.message, 1); } };
   $('#saveS').onclick = async () => {
     const body = {};
-    $$('[data-k]').forEach(i => { const ks = i.dataset.k.split('.'); let o = body; ks.slice(0, -1).forEach(k => o = o[k] = o[k] || {}); o[ks.at(-1)] = i.type === 'checkbox' ? i.checked : i.type === 'number' ? +i.value : i.value; });
+    $$('[data-k]').forEach(i => { const ks = i.dataset.k.split('.'); let o = body; ks.slice(0, -1).forEach(k => o = o[k] = o[k] || {}); o[ks.at(-1)] = i.type === 'checkbox' ? i.checked : i.type === 'number' ? +i.value : ks[0] === 'social' ? cleanUrl(i.value) : i.value; });
     try { await api('/settings', { method: 'PUT', body }); toast('Settings saved - website updated'); } catch (x) { toast(x.message, 1); }
   };
   A.liveHandler = null;
