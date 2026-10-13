@@ -1,7 +1,8 @@
 /* Tiny dependency-free SVG charts (no CDN, works under the strict CSP) */
 const COLORS = { visits: '#141414', whatsapp: '#128C4A', productViews: '#2b6cb0', cartAdds: '#DC0000', enquiries: '#b7791f' };
 function lineChart(labels, series) {
-  const W = 640, H = 220, L = 34, R = 10, T = 10, B = 26, n = labels.length;
+  /* size the viewBox to the screen so axis text stays ~11px on phones instead of shrinking with a 640px canvas */
+  const vw = document.documentElement.clientWidth, W = vw < 700 ? Math.max(280, vw - 56) : 640, H = vw < 700 ? 200 : 220, L = 34, R = 10, T = 10, B = 26, n = labels.length;
   const max = Math.max(4, ...series.flatMap(s => s.data));
   const nice = Math.ceil(max / 4) * 4;
   const x = i => L + (n <= 1 ? (W - L - R) / 2 : i * (W - L - R) / (n - 1)), y = v => T + (H - T - B) * (1 - v / nice);
